@@ -32,9 +32,9 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         public async Task QueueMessageBatchAsync<T>(Guid streamGuid, string streamNamespace, IEnumerable<T> events, StreamSequenceToken token, Dictionary<string, object> requestContext)
         {
-            if (_connection == null)
-                await Task.Run(async() => await CreateConnection());
-            await Task.Run(() => {
+            await Task.Run(async() => {
+                if (_connection == null)
+                    await CreateConnection();
                 foreach (var e in events)
                 {
                     var bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(e));
