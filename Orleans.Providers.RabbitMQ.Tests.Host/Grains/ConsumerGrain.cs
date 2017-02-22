@@ -9,7 +9,7 @@ namespace Orleans.Providers.RabbitMQ.Tests.Host.Grains
     {
         public async override Task OnActivateAsync()
         {
-            var stream = GetStreamProvider("Default").GetStream<string>(this.GetPrimaryKey(), "TestStreamNamespace");
+            var stream = GetStreamProvider("Default").GetStream<string>(this.GetPrimaryKey(), "TestNamespace");
             await stream.SubscribeAsync(this);
         }
 
@@ -30,6 +30,7 @@ namespace Orleans.Providers.RabbitMQ.Tests.Host.Grains
 
         public Task OnNextAsync(string item, StreamSequenceToken token = null)
         {
+            Console.WriteLine($"Got message '{item}'!");
             return TaskDone.Done;
         }
     }

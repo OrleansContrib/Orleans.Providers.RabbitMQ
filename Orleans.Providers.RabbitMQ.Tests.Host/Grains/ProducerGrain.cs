@@ -9,13 +9,11 @@ namespace Orleans.Providers.RabbitMQ.Tests.Host.Grains
     public class ProducerGrain : Grain, IProducerGrain, IAsyncObserver<string>
     {
         private IAsyncStream<string> _stream;
-        private IAsyncStream<string> _stream2;
 
         public async override Task OnActivateAsync()
         {
             var streamProvider = base.GetStreamProvider("Default");
-            _stream = streamProvider.GetStream<string>(this.GetPrimaryKey(), "TestStreamNamespace");
-            _stream2 = streamProvider.GetStream<string>(this.GetPrimaryKey(), "TestStreamNamespace2");
+            _stream = streamProvider.GetStream<string>(this.GetPrimaryKey(), "TestNamespace");
             await _stream.SubscribeAsync(this);
         }
 
@@ -45,10 +43,10 @@ namespace Orleans.Providers.RabbitMQ.Tests.Host.Grains
 
         private async Task OnSimulationTick(object state)
         {
+            Console.WriteLine($"Sending 'Lipsum' into ...");
             await _stream.OnNextAsync("Lipsum");
+            Console.WriteLine("Sending 'Foor' & 'Bar'...");
             await _stream.OnNextBatchAsync(new List<string> { "Foo", "Bar" });
-            await _stream2.OnNextAsync("Lipsum");
-            await _stream2.OnNextBatchAsync(new List<string> { "Foo", "Bar" });
         }
     }
 }

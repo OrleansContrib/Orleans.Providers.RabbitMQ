@@ -26,12 +26,12 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         public bool ImportRequestContext()
         {
-            return false;
+            return true;
         }
 
         public bool ShouldDeliver(IStreamIdentity stream, object filterData, StreamFilterPredicate shouldReceiveFunc)
         {
-            return false;
+            return true;
         }
     }
 }

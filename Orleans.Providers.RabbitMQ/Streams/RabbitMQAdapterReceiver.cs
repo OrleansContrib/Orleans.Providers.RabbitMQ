@@ -29,9 +29,12 @@ namespace Orleans.Providers.RabbitMQ.Streams
                 if (_connection == null)
                     await CreateConnection();
                 var result = _model.BasicGet(_config.Queue, true);
+                if (result == null)
+                    return null;
                 var container = new RabbitMQBatchContainer(result.Body);
                 container.StreamNamespace = _config.Namespace;
                 container.StreamGuid = Guid.Empty;
+                Console.WriteLine($"Receiving for {container.StreamNamespace}:{container.StreamGuid}...");
                 return new List<IBatchContainer> { container };
             });
         }
@@ -52,12 +55,13 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         public Task Initialize(TimeSpan timeout)
         {
-            throw new NotImplementedException();
+            return TaskDone.Done;
         }
 
         public Task MessagesDeliveredAsync(IList<IBatchContainer> messages)
         {
-            throw new NotImplementedException();
+            // TODO: Ack messages, if required.
+            return TaskDone.Done;
         }
 
         public Task Shutdown(TimeSpan timeout)

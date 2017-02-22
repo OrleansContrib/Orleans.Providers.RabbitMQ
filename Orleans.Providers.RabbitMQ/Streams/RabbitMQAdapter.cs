@@ -13,16 +13,17 @@ namespace Orleans.Providers.RabbitMQ.Streams
         private RabbitMQStreamProviderConfig _config;
         private IConnection _connection;
         private IModel _model;
+        
+        public StreamProviderDirection Direction { get { return StreamProviderDirection.ReadWrite; } }
 
-        public StreamProviderDirection Direction { get; private set; }
-
-        public bool IsRewindable { get; private set; }
+        public bool IsRewindable { get { return false; } }
 
         public string Name { get; private set; }
         
-        public RabbitMQAdapter(RabbitMQStreamProviderConfig config)
+        public RabbitMQAdapter(RabbitMQStreamProviderConfig config, string providerName)
         {
             _config = config;
+            Name = providerName;
         }
 
         public IQueueAdapterReceiver CreateReceiver(QueueId queueId)
