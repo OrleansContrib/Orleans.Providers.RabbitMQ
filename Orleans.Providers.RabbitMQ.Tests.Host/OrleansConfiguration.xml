@@ -1,7 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <OrleansConfiguration xmlns="urn:orleans">
   <Globals>
+    <StorageProviders>
+      <Provider Type="Orleans.Storage.MemoryStorage" Name="Default" />
+      <Provider Type="Orleans.Storage.MemoryStorage" Name="PubSubStore" />
+    </StorageProviders>
     <StreamProviders>
+      <!--<Provider Type="Orleans.Providers.MemoryStreamProvider" Name="Default"/>-->
       <Provider Type="Orleans.Providers.RabbitMQ.Streams.RabbitMQStreamProvider" Name="Default"
                 HostName="localhost" Port="5671" VirtualHost="/" Exchange="exchange" Queue="queue" Namespace="TestNamespace" RoutingKey="#" Username="username" Password="password" />
     </StreamProviders>

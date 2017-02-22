@@ -1,10 +1,13 @@
 ﻿using Orleans.Runtime.Configuration;
+using Orleans.Storage;
 using System;
 
 namespace Orleans.Providers.Firebase.Tests.Host
 {
     class Program
     {
+        private static MemoryStorage storage;
+
         private static OrleansWrapper hostWrapper;
 
         public static int Main(string[] args)

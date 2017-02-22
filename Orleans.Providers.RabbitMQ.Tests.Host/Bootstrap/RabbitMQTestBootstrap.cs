@@ -15,6 +15,7 @@ namespace Orleans.Providers.RabbitMQ.Test.Host.Bootstrap
 
         public async Task Init(string name, IProviderRuntime providerRuntime, IProviderConfiguration config)
         {
+            await providerRuntime.GrainFactory.GetGrain<IConsumerGrain>(Guid.Empty).Activate();
             await providerRuntime.GrainFactory.GetGrain<IProducerGrain>(Guid.Empty).Simulate();
         }
     }
