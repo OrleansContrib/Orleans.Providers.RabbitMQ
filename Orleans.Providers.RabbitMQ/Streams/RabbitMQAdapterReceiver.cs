@@ -24,13 +24,16 @@ namespace Orleans.Providers.RabbitMQ.Streams
         
         public async Task<IList<IBatchContainer>> GetQueueMessagesAsync(int maxCount)
         {
-            if (_connection == null)
-                await Task.Run(async () => await CreateConnection());
-            var result = _model.BasicGet(_config.Queue, true);
-            var container = new RabbitMQBatchContainer(result.Body);
-            container.StreamNamespace = _config.Namespace;
-            container.StreamGuid = Guid.Empty;
-            return new List<IBatchContainer> { container };
+            return await Task.Run(async () =>
+            {
+                if (_connection == null)
+                    await CreateConnection();
+                var result = _model.BasicGet(_config.Queue, true);
+                var container = new RabbitMQBatchContainer(result.Body);
+                container.StreamNamespace = _config.Namespace;
+                container.StreamGuid = Guid.Empty;
+                return new List<IBatchContainer> { container };
+            });
         }
 
         private async Task CreateConnection()
