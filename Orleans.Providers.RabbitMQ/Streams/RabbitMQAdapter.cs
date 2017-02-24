@@ -56,8 +56,8 @@ namespace Orleans.Providers.RabbitMQ.Streams
             factory.Password = _config.Password;
             _connection = factory.CreateConnection($"{Name}_Producer");
             _model = _connection.CreateModel();
-            _model.ExchangeDeclare(_config.Exchange, ExchangeType.Direct, false, false, null);
-            _model.QueueDeclare(_config.Queue, false, false, false, null);
+            _model.ExchangeDeclare(_config.Exchange, _config.ExchangeType, _config.ExchangeDurable, _config.AutoDelete, null);
+            _model.QueueDeclare(_config.Queue, _config.QueueDurable, false, false, null);
             _model.QueueBind(_config.Queue, _config.Exchange, _config.RoutingKey, null);
         }
     }
