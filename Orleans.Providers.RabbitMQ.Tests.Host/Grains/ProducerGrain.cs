@@ -1,38 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Orleans.Providers.RabbitMQ.Tests.Host.Interfaces;
 using Orleans.Streams;
-using System.Collections.Generic;
 
 namespace Orleans.Providers.RabbitMQ.Tests.Host.Grains
 {
-    public class ProducerGrain : Grain, IProducerGrain, IAsyncObserver<string>
+    public class ProducerGrain : Grain, IProducerGrain
     {
         private IAsyncStream<string> _stream;
 
         public async override Task OnActivateAsync()
         {
-            var streamProvider = base.GetStreamProvider("Default");
-            _stream = streamProvider.GetStream<string>(this.GetPrimaryKey(), "TestNamespace");
-            await _stream.SubscribeAsync(this);
-        }
-
-        public Task OnCompletedAsync()
-        {
-            Console.WriteLine("OnCompletedAsync()");
-            return TaskDone.Done;
-        }
-
-        public Task OnErrorAsync(Exception ex)
-        {
-            Console.WriteLine("OnErrorAsync("+ex+")");
-            return TaskDone.Done;
-        }
-
-        public Task OnNextAsync(string item, StreamSequenceToken token = null)
-        {
-            Console.WriteLine("OnCompletedAsync("+item+","+token+")");
-            return TaskDone.Done;
+            var provider = GetStreamProvider("Default");
+            _stream = provider.GetStream<string>(this.GetPrimaryKey(), "TestNamespace");
         }
 
         public Task Simulate()
@@ -43,9 +24,7 @@ namespace Orleans.Providers.RabbitMQ.Tests.Host.Grains
 
         private async Task OnSimulationTick(object state)
         {
-            Console.WriteLine($"Sending 'Lipsum' into ...");
             await _stream.OnNextAsync("Lipsum");
-            Console.WriteLine("Sending 'Foor' & 'Bar'...");
             await _stream.OnNextBatchAsync(new List<string> { "Foo", "Bar" });
         }
     }

@@ -1,11 +1,12 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Orleans.Providers.RabbitMQ.Tests.Host.Interfaces;
+using System;
 using Orleans.Streams;
 
 namespace Orleans.Providers.RabbitMQ.Tests.Host.Grains
 {
-    public class ConsumerGrain : Grain, IConsumerGrain, IAsyncObserver<string>
+    [ImplicitStreamSubscription("TestNamespace")]
+    public class ImplicitGrain : Grain, IImplicitGrain, IAsyncObserver<string>
     {
         private StreamSubscriptionHandle<string> _subscription;
 
@@ -16,24 +17,19 @@ namespace Orleans.Providers.RabbitMQ.Tests.Host.Grains
             _subscription = await stream.SubscribeAsync(this);
         }
 
-        public Task Activate()
+        public async Task OnCompletedAsync()
         {
-            return TaskDone.Done;
-        }
-        
-        public Task OnCompletedAsync()
-        {
-            return TaskDone.Done;
+
         }
 
-        public Task OnErrorAsync(Exception ex)
+        public async Task OnErrorAsync(Exception ex)
         {
-            return TaskDone.Done;
+
         }
 
-        public Task OnNextAsync(string item, StreamSequenceToken token = null)
+        public async Task OnNextAsync(string item, StreamSequenceToken token = null)
         {
-            return TaskDone.Done;
+
         }
     }
 }

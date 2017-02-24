@@ -34,7 +34,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
                 var container = new RabbitMQBatchContainer(result.Body);
                 container.StreamNamespace = _config.Namespace;
                 container.StreamGuid = Guid.Empty;
-                Console.WriteLine($"Receiving for {container.StreamNamespace}:{container.StreamGuid}...");
+                container.SequenceToken = new RabbitMQSequenceToken(result.DeliveryTag);
                 return new List<IBatchContainer> { container };
             });
         }

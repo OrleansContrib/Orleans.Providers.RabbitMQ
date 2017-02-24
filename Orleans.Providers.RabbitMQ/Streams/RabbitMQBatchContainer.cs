@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using Orleans.Streams;
+using Newtonsoft.Json;
+using System.Text;
 
 namespace Orleans.Providers.RabbitMQ.Streams
 {
@@ -21,7 +23,8 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         public IEnumerable<Tuple<T, StreamSequenceToken>> GetEvents<T>()
         {
-            return new List<Tuple<T, StreamSequenceToken>> { new Tuple<T, StreamSequenceToken>(default(T), null) };
+            T item = JsonConvert.DeserializeObject<T>(Encoding.ASCII.GetString(body));
+            return new List<Tuple<T, StreamSequenceToken>> { new Tuple<T, StreamSequenceToken>(item, null) };
         }
 
         public bool ImportRequestContext()
