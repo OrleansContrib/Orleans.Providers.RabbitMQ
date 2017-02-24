@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Orleans.Streams;
 using RabbitMQ.Client;
+using Orleans.Runtime;
+using Orleans.Providers.Streams.Common;
 
 namespace Orleans.Providers.RabbitMQ.Streams
 {
@@ -10,21 +12,23 @@ namespace Orleans.Providers.RabbitMQ.Streams
     {
         private RabbitMQStreamProviderConfig _config;
         private IConnection _connection;
+        private Logger _logger;
         private IModel _model;
 
-        public static IQueueAdapterReceiver Create(RabbitMQStreamProviderConfig config)
+        public static IQueueAdapterReceiver Create(RabbitMQStreamProviderConfig config, Logger logger)
         {
-            return new RabbitMQAdapterReceiver(config);
+            return new RabbitMQAdapterReceiver(config, logger);
         }
 
-        public RabbitMQAdapterReceiver(RabbitMQStreamProviderConfig config)
+        public RabbitMQAdapterReceiver(RabbitMQStreamProviderConfig config, Logger logger)
         {
             _config = config;
+            _logger = logger;
         }
         
         public async Task<IList<IBatchContainer>> GetQueueMessagesAsync(int maxCount)
         {
-            return await Task.Run(async () =>
+            var queueMessages = await Task.Run(async () =>
             {
                 if (_connection == null)
                     await CreateConnection();
@@ -34,9 +38,17 @@ namespace Orleans.Providers.RabbitMQ.Streams
                 var container = new RabbitMQBatchContainer(result.Body);
                 container.StreamNamespace = _config.Namespace;
                 container.StreamGuid = Guid.Empty;
-                container.SequenceToken = new RabbitMQSequenceToken(result.DeliveryTag);
+                container.SequenceToken = new EventSequenceToken((long)result.DeliveryTag);
                 return new List<IBatchContainer> { container };
             });
+            if (queueMessages != null && _logger.SeverityLevel >= Severity.Verbose)
+            {
+                foreach (var message in queueMessages)
+                {
+                    _logger.Verbose($"Received message {((EventSequenceToken)message.SequenceToken).SequenceNumber}.");
+                }
+            }
+            return queueMessages;
         }
 
         private async Task CreateConnection()
@@ -66,6 +78,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         public Task Shutdown(TimeSpan timeout)
         {
+            // TODO: Handle shutdown.
             throw new NotImplementedException();
         }
     }

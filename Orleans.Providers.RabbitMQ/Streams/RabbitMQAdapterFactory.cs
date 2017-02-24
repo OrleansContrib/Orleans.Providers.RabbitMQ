@@ -8,11 +8,14 @@ namespace Orleans.Providers.RabbitMQ.Streams
 {
     public class RabbitMQAdapterFactory : IQueueAdapterFactory
     {
+        public const int NumQueuesDefaultValue = 8;
+
         private SimpleQueueAdapterCache _adapterCache;
         private int _cacheSize;
         private RabbitMQStreamProviderConfig _config;
         private Logger _logger;
         private string _providerName;
+        private IStreamQueueMapper _streamQueueMapper;
 
         protected Func<QueueId, Task<IStreamFailureHandler>> StreamFailureHandlerFactory { private get; set; }
 
@@ -23,8 +26,10 @@ namespace Orleans.Providers.RabbitMQ.Streams
             _logger = logger;
 
             _cacheSize = SimpleQueueAdapterCache.ParseSize(config, 4096);
-
             _adapterCache = new SimpleQueueAdapterCache(_cacheSize, logger);
+
+            _streamQueueMapper = new HashRingBasedStreamQueueMapper(NumQueuesDefaultValue, _providerName);
+
             if (StreamFailureHandlerFactory == null)
             {
                 StreamFailureHandlerFactory =
@@ -34,7 +39,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         public Task<IQueueAdapter> CreateAdapter()
         {
-            IQueueAdapter adapter = new RabbitMQAdapter(_config, _providerName);
+            IQueueAdapter adapter = new RabbitMQAdapter(_config, _logger, _providerName);
             return Task.FromResult(adapter);
         }
 
@@ -50,7 +55,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         public IStreamQueueMapper GetStreamQueueMapper()
         {
-            return new HashRingBasedStreamQueueMapper(10, "Prefix");
+            return _streamQueueMapper;
         }
     }
 }

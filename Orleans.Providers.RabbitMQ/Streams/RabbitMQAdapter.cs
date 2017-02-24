@@ -5,6 +5,7 @@ using Orleans.Streams;
 using RabbitMQ.Client;
 using Newtonsoft.Json;
 using System.Text;
+using Orleans.Runtime;
 
 namespace Orleans.Providers.RabbitMQ.Streams
 {
@@ -12,30 +13,32 @@ namespace Orleans.Providers.RabbitMQ.Streams
     {
         private RabbitMQStreamProviderConfig _config;
         private IConnection _connection;
+        private Logger _logger;
         private IModel _model;
-        
+
         public StreamProviderDirection Direction { get { return StreamProviderDirection.ReadWrite; } }
 
         public bool IsRewindable { get { return false; } }
 
         public string Name { get; private set; }
         
-        public RabbitMQAdapter(RabbitMQStreamProviderConfig config, string providerName)
+        public RabbitMQAdapter(RabbitMQStreamProviderConfig config, Logger logger, string providerName)
         {
             _config = config;
+            _logger = logger;
             Name = providerName;
         }
 
         public IQueueAdapterReceiver CreateReceiver(QueueId queueId)
         {
-            return RabbitMQAdapterReceiver.Create(_config);
+            return RabbitMQAdapterReceiver.Create(_config, _logger);
         }
 
         public async Task QueueMessageBatchAsync<T>(Guid streamGuid, string streamNamespace, IEnumerable<T> events, StreamSequenceToken token, Dictionary<string, object> requestContext)
         {
-            await Task.Run(async() => {
+            await Task.Run(() => {
                 if (_connection == null)
-                    await CreateConnection();
+                    CreateConnection();
                 foreach (var e in events)
                 {
                     var bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(e));
@@ -44,7 +47,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
             });
         }
 
-        private Task CreateConnection()
+        private void CreateConnection()
         {
             var factory = new ConnectionFactory();
             factory.HostName = _config.HostName;
@@ -56,7 +59,6 @@ namespace Orleans.Providers.RabbitMQ.Streams
             _model.ExchangeDeclare(_config.Exchange, ExchangeType.Direct, false, false, null);
             _model.QueueDeclare(_config.Queue, false, false, false, null);
             _model.QueueBind(_config.Queue, _config.Exchange, _config.RoutingKey, null);
-            return TaskDone.Done;
         }
     }
 }

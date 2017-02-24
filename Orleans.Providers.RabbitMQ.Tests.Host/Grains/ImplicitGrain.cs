@@ -2,6 +2,7 @@
 using Orleans.Providers.RabbitMQ.Tests.Host.Interfaces;
 using System;
 using Orleans.Streams;
+using Orleans.Runtime;
 
 namespace Orleans.Providers.RabbitMQ.Tests.Host.Grains
 {
@@ -17,19 +18,20 @@ namespace Orleans.Providers.RabbitMQ.Tests.Host.Grains
             _subscription = await stream.SubscribeAsync(this);
         }
 
-        public async Task OnCompletedAsync()
+        public Task OnCompletedAsync()
         {
-
+            return TaskDone.Done;
         }
 
-        public async Task OnErrorAsync(Exception ex)
+        public Task OnErrorAsync(Exception ex)
         {
-
+            return TaskDone.Done;
         }
 
-        public async Task OnNextAsync(string item, StreamSequenceToken token = null)
+        public Task OnNextAsync(string item, StreamSequenceToken token = null)
         {
-
+            GetLogger().Info("Received message '{0}'!", item);
+            return TaskDone.Done;
         }
     }
 }
