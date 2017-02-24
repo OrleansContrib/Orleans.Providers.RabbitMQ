@@ -14,16 +14,18 @@ namespace Orleans.Providers.RabbitMQ.Streams
         private IConnection _connection;
         private Logger _logger;
         private IModel _model;
+        private string _providerName;
 
-        public static IQueueAdapterReceiver Create(RabbitMQStreamProviderConfig config, Logger logger)
+        public static IQueueAdapterReceiver Create(RabbitMQStreamProviderConfig config, Logger logger, string providerName)
         {
-            return new RabbitMQAdapterReceiver(config, logger);
+            return new RabbitMQAdapterReceiver(config, logger, providerName);
         }
 
-        public RabbitMQAdapterReceiver(RabbitMQStreamProviderConfig config, Logger logger)
+        public RabbitMQAdapterReceiver(RabbitMQStreamProviderConfig config, Logger logger, string providerName)
         {
             _config = config;
             _logger = logger;
+            _providerName = providerName;
         }
         
         public async Task<IList<IBatchContainer>> GetQueueMessagesAsync(int maxCount)
@@ -58,7 +60,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
             factory.VirtualHost = _config.VirtualHost;
             factory.UserName = _config.Username;
             factory.Password = _config.Password;
-            _connection = factory.CreateConnection();
+            _connection = factory.CreateConnection($"{_providerName}_Consumer");
             _model = _connection.CreateModel();
             _model.ExchangeDeclare(_config.Exchange, ExchangeType.Direct, false, false, null);
             _model.QueueDeclare(_config.Queue, false, false, false, null);

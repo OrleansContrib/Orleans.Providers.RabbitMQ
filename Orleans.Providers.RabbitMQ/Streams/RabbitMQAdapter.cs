@@ -31,7 +31,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         public IQueueAdapterReceiver CreateReceiver(QueueId queueId)
         {
-            return RabbitMQAdapterReceiver.Create(_config, _logger);
+            return RabbitMQAdapterReceiver.Create(_config, _logger, Name);
         }
 
         public async Task QueueMessageBatchAsync<T>(Guid streamGuid, string streamNamespace, IEnumerable<T> events, StreamSequenceToken token, Dictionary<string, object> requestContext)
@@ -54,7 +54,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
             factory.VirtualHost = _config.VirtualHost;
             factory.UserName = _config.Username;
             factory.Password = _config.Password;
-            _connection = factory.CreateConnection();
+            _connection = factory.CreateConnection($"{Name}_Producer");
             _model = _connection.CreateModel();
             _model.ExchangeDeclare(_config.Exchange, ExchangeType.Direct, false, false, null);
             _model.QueueDeclare(_config.Queue, false, false, false, null);
