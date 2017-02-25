@@ -6,6 +6,14 @@ using Orleans.Streams;
 
 namespace Orleans.Providers.RabbitMQ.Streams
 {
+    public class RabbitMQAdapterFactory<TCustomMapper> : RabbitMQAdapterFactory where TCustomMapper : IRabbitMQCustomMapper
+    {
+        public RabbitMQAdapterFactory() : base(Activator.CreateInstance<TCustomMapper>())
+        {
+
+        }
+    }
+
     public class RabbitMQAdapterFactory : IQueueAdapterFactory
     {
         public const int NumQueuesDefaultValue = 8;
@@ -13,9 +21,20 @@ namespace Orleans.Providers.RabbitMQ.Streams
         private SimpleQueueAdapterCache _adapterCache;
         private int _cacheSize;
         private RabbitMQStreamProviderConfig _config;
+        private IRabbitMQCustomMapper _customMapper;
         private Logger _logger;
         private string _providerName;
         private IStreamQueueMapper _streamQueueMapper;
+
+        public RabbitMQAdapterFactory()
+        {
+
+        }
+
+        public RabbitMQAdapterFactory(IRabbitMQCustomMapper customMapper)
+        {
+            _customMapper = customMapper;
+        }
 
         protected Func<QueueId, Task<IStreamFailureHandler>> StreamFailureHandlerFactory { private get; set; }
 
@@ -24,6 +43,8 @@ namespace Orleans.Providers.RabbitMQ.Streams
             _config = new RabbitMQStreamProviderConfig(config);
             _providerName = providerName;
             _logger = logger;
+
+            _customMapper?.Init(logger);
 
             _cacheSize = SimpleQueueAdapterCache.ParseSize(config, 4096);
             _adapterCache = new SimpleQueueAdapterCache(_cacheSize, logger);
@@ -39,7 +60,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         public Task<IQueueAdapter> CreateAdapter()
         {
-            IQueueAdapter adapter = new RabbitMQAdapter(_config, _logger, _providerName);
+            IQueueAdapter adapter = new RabbitMQAdapter(_config, _logger, _providerName, _customMapper);
             return Task.FromResult(adapter);
         }
 

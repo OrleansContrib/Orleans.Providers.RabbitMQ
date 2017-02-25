@@ -13,6 +13,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
     {
         private RabbitMQStreamProviderConfig _config;
         private IConnection _connection;
+        private IRabbitMQCustomMapper _customMapper;
         private Logger _logger;
         private IModel _model;
 
@@ -22,16 +23,17 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         public string Name { get; private set; }
         
-        public RabbitMQAdapter(RabbitMQStreamProviderConfig config, Logger logger, string providerName)
+        public RabbitMQAdapter(RabbitMQStreamProviderConfig config, Logger logger, string providerName, IRabbitMQCustomMapper customMapper)
         {
             _config = config;
+            _customMapper = customMapper;
             _logger = logger;
             Name = providerName;
         }
 
         public IQueueAdapterReceiver CreateReceiver(QueueId queueId)
         {
-            return RabbitMQAdapterReceiver.Create(_config, _logger, Name);
+            return RabbitMQAdapterReceiver.Create(_config, _logger, Name, _customMapper);
         }
 
         public async Task QueueMessageBatchAsync<T>(Guid streamGuid, string streamNamespace, IEnumerable<T> events, StreamSequenceToken token, Dictionary<string, object> requestContext)

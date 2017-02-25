@@ -5,6 +5,9 @@ using Orleans.Streams;
 using RabbitMQ.Client;
 using Orleans.Runtime;
 using Orleans.Providers.Streams.Common;
+using Newtonsoft.Json;
+using System.Text;
+using System.Reflection;
 
 namespace Orleans.Providers.RabbitMQ.Streams
 {
@@ -12,18 +15,20 @@ namespace Orleans.Providers.RabbitMQ.Streams
     {
         private RabbitMQStreamProviderConfig _config;
         private IConnection _connection;
+        private IRabbitMQCustomMapper _customMapper;
         private Logger _logger;
         private IModel _model;
         private string _providerName;
 
-        public static IQueueAdapterReceiver Create(RabbitMQStreamProviderConfig config, Logger logger, string providerName)
+        public static IQueueAdapterReceiver Create(RabbitMQStreamProviderConfig config, Logger logger, string providerName, IRabbitMQCustomMapper customMapper)
         {
-            return new RabbitMQAdapterReceiver(config, logger, providerName);
+            return new RabbitMQAdapterReceiver(config, logger, providerName, customMapper);
         }
 
-        public RabbitMQAdapterReceiver(RabbitMQStreamProviderConfig config, Logger logger, string providerName)
+        public RabbitMQAdapterReceiver(RabbitMQStreamProviderConfig config, Logger logger, string providerName, IRabbitMQCustomMapper customMapper)
         {
             _config = config;
+            _customMapper = customMapper;
             _logger = logger;
             _providerName = providerName;
         }
@@ -37,10 +42,16 @@ namespace Orleans.Providers.RabbitMQ.Streams
                 var result = _model.BasicGet(_config.Queue, true);
                 if (result == null)
                     return null;
-                var container = new RabbitMQBatchContainer(result.Body);
-                container.StreamNamespace = _config.Namespace;
+                var container = new RabbitMQBatchContainer(result.Body, _customMapper);
                 container.StreamGuid = Guid.Empty;
+                container.StreamNamespace = _config.Namespace;
                 container.SequenceToken = new EventSequenceToken((long)result.DeliveryTag);
+                if (_customMapper != null)
+                {
+                    var streamMap = _customMapper.MapToStream(result.Body, _config.Namespace);
+                    container.StreamGuid = streamMap.Item1;
+                    container.StreamNamespace = streamMap.Item2;
+                }
                 return new List<IBatchContainer> { container };
             });
             if (queueMessages != null && _logger.SeverityLevel >= Severity.Verbose)
