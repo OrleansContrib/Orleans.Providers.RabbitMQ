@@ -5,9 +5,6 @@ using Orleans.Streams;
 using RabbitMQ.Client;
 using Orleans.Runtime;
 using Orleans.Providers.Streams.Common;
-using Newtonsoft.Json;
-using System.Text;
-using System.Reflection;
 
 namespace Orleans.Providers.RabbitMQ.Streams
 {
@@ -19,7 +16,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
         private Logger _logger;
         private IModel _model;
         private string _providerName;
-
+        
         public static IQueueAdapterReceiver Create(RabbitMQStreamProviderConfig config, Logger logger, string providerName, IRabbitMQCustomMapper customMapper)
         {
             return new RabbitMQAdapterReceiver(config, logger, providerName, customMapper);
@@ -35,42 +32,69 @@ namespace Orleans.Providers.RabbitMQ.Streams
         
         public async Task<IList<IBatchContainer>> GetQueueMessagesAsync(int maxCount)
         {
-            var queueMessages = await Task.Run(async () =>
-            {
-                if (_connection == null)
-                    await CreateConnection();
-                var result = _model.BasicGet(_config.Queue, true);
-                if (result == null)
-                    return null;
-                var container = new RabbitMQBatchContainer(result.Body, _customMapper);
-                container.StreamGuid = Guid.Empty;
-                container.StreamNamespace = _config.Namespace;
-                container.SequenceToken = new EventSequenceToken((long)result.DeliveryTag);
-                if (_customMapper != null)
-                {
-                    var streamMap = _customMapper.MapToStream(result.Body, _config.Namespace);
-                    container.StreamGuid = streamMap.Item1;
-                    container.StreamNamespace = streamMap.Item2;
-                }
-                return new List<IBatchContainer> { container };
-            });
-            if (queueMessages != null && _logger.SeverityLevel >= Severity.Verbose)
-            {
-                foreach (var message in queueMessages)
-                {
-                    _logger.Verbose($"Received message {((EventSequenceToken)message.SequenceToken).SequenceNumber}.");
-                }
-            }
-            return queueMessages;
+            return await Task.Run(() => GetQueueMessagesExternal(maxCount));
         }
 
-        private async Task CreateConnection()
+        private IList<IBatchContainer> GetQueueMessagesExternal(int maxCount)
         {
-            var factory = new ConnectionFactory();
-            factory.HostName = _config.HostName;
-            factory.VirtualHost = _config.VirtualHost;
-            factory.UserName = _config.Username;
-            factory.Password = _config.Password;
+            List<IBatchContainer> batches = null;
+            int count = 0;
+            
+            while (true)
+            {
+                if (count == maxCount)
+                    return batches;
+
+                if (!IsConnected())
+                    Connect();
+
+                var result = _model.BasicGet(_config.Queue, true);
+
+                if (result == null)
+                    return batches;
+
+                if (batches == null)
+                    batches = new List<IBatchContainer>();
+
+                batches.Add(CreateContainer(result));
+
+                count++;
+            }
+        }
+
+        private RabbitMQBatchContainer CreateContainer(BasicGetResult result)
+        {
+            var container = new RabbitMQBatchContainer(result.Body, _customMapper)
+            {
+                StreamGuid = Guid.Empty,
+                StreamNamespace = _config.Namespace,
+                SequenceToken = new EventSequenceToken((long)result.DeliveryTag)
+            };
+
+            if (_customMapper != null)
+            {
+                var streamMap = _customMapper.MapToStream(result.Body, _config.Namespace);
+                container.StreamGuid = streamMap.Item1;
+                container.StreamNamespace = streamMap.Item2;
+            }
+
+            return container;
+        }
+
+        private bool IsConnected()
+        {
+            return _connection != null && _connection.IsOpen;
+        }
+
+        private void Connect()
+        {
+            var factory = new ConnectionFactory()
+            {
+                HostName = _config.HostName,
+                VirtualHost = _config.VirtualHost,
+                UserName = _config.Username,
+                Password = _config.Password
+            };
             _connection = factory.CreateConnection($"{_providerName}_Consumer");
             _model = _connection.CreateModel();
             _model.ExchangeDeclare(_config.Exchange, _config.ExchangeType, _config.ExchangeDurable, _config.AutoDelete, null);

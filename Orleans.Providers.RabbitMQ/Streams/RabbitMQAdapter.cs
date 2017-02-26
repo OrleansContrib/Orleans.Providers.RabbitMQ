@@ -51,11 +51,13 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         private void CreateConnection()
         {
-            var factory = new ConnectionFactory();
-            factory.HostName = _config.HostName;
-            factory.VirtualHost = _config.VirtualHost;
-            factory.UserName = _config.Username;
-            factory.Password = _config.Password;
+            var factory = new ConnectionFactory()
+            {
+                HostName = _config.HostName,
+                VirtualHost = _config.VirtualHost,
+                UserName = _config.Username,
+                Password = _config.Password
+            };
             _connection = factory.CreateConnection($"{Name}_Producer");
             _model = _connection.CreateModel();
             _model.ExchangeDeclare(_config.Exchange, _config.ExchangeType, _config.ExchangeDurable, _config.AutoDelete, null);
