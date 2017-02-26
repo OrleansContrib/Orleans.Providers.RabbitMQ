@@ -12,21 +12,21 @@ namespace Orleans.Providers.RabbitMQ.Streams
     {
         private RabbitMQStreamProviderConfig _config;
         private IConnection _connection;
-        private IRabbitMQCustomMapper _customMapper;
         private Logger _logger;
+        private IRabbitMQMapper _mapper;
         private IModel _model;
         private string _providerName;
         
-        public static IQueueAdapterReceiver Create(RabbitMQStreamProviderConfig config, Logger logger, string providerName, IRabbitMQCustomMapper customMapper)
+        public static IQueueAdapterReceiver Create(RabbitMQStreamProviderConfig config, Logger logger, string providerName, IRabbitMQMapper mapper)
         {
-            return new RabbitMQAdapterReceiver(config, logger, providerName, customMapper);
+            return new RabbitMQAdapterReceiver(config, logger, providerName, mapper);
         }
 
-        public RabbitMQAdapterReceiver(RabbitMQStreamProviderConfig config, Logger logger, string providerName, IRabbitMQCustomMapper customMapper)
+        public RabbitMQAdapterReceiver(RabbitMQStreamProviderConfig config, Logger logger, string providerName, IRabbitMQMapper mapper)
         {
             _config = config;
-            _customMapper = customMapper;
             _logger = logger;
+            _mapper = mapper;
             _providerName = providerName;
         }
         
@@ -64,19 +64,13 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         private RabbitMQBatchContainer CreateContainer(BasicGetResult result)
         {
-            var container = new RabbitMQBatchContainer(result.Body, _customMapper)
+            var streamMap = _mapper.MapToStream(result.Body, _config.Namespace);
+            var container = new RabbitMQBatchContainer(result.Body, _mapper)
             {
-                StreamGuid = Guid.Empty,
-                StreamNamespace = _config.Namespace,
+                StreamGuid = streamMap.Item1,
+                StreamNamespace = streamMap.Item2,
                 SequenceToken = new EventSequenceToken((long)result.DeliveryTag)
             };
-
-            if (_customMapper != null)
-            {
-                var streamMap = _customMapper.MapToStream(result.Body, _config.Namespace);
-                container.StreamGuid = streamMap.Item1;
-                container.StreamNamespace = streamMap.Item2;
-            }
 
             return container;
         }

@@ -10,12 +10,12 @@ namespace Orleans.Providers.RabbitMQ.Streams
     public class RabbitMQBatchContainer : IBatchContainer
     {
         private byte[] _body;
-        private IRabbitMQCustomMapper _customMapper;
+        private IRabbitMQMapper _mapper;
 
-        public RabbitMQBatchContainer(byte[] body, IRabbitMQCustomMapper customMapper)
+        public RabbitMQBatchContainer(byte[] body, IRabbitMQMapper mapper)
         {
             _body = body;
-            _customMapper = customMapper;
+            _mapper = mapper;
         }
 
         public StreamSequenceToken SequenceToken { get; set; }
@@ -26,19 +26,12 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         public IEnumerable<Tuple<T, StreamSequenceToken>> GetEvents<T>()
         {
-            if (_customMapper != null)
-            {
-                var message = _customMapper.MapToType<T>(_body);
-                if (message == null)
-                    return new List<Tuple<T, StreamSequenceToken>>();
-                return new List<Tuple<T, StreamSequenceToken>> { new Tuple<T, StreamSequenceToken>(message, null) };
-            }
-            if (_body is T)
-                return new List<Tuple<T, StreamSequenceToken>> { new Tuple<T, StreamSequenceToken>((T)(object)_body, null) };
-            T item = JsonConvert.DeserializeObject<T>(Encoding.ASCII.GetString(_body));
-            return new List<Tuple<T, StreamSequenceToken>> { new Tuple<T, StreamSequenceToken>(item, null) };
+            var message = _mapper.MapToType<T>(_body);
+            if (message == null)
+                return new List<Tuple<T, StreamSequenceToken>>();
+            return new List<Tuple<T, StreamSequenceToken>> { new Tuple<T, StreamSequenceToken>(message, null) };
         }
-
+        
         public bool ImportRequestContext()
         {
             return true;

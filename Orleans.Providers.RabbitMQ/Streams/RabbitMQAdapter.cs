@@ -6,6 +6,7 @@ using RabbitMQ.Client;
 using Newtonsoft.Json;
 using System.Text;
 using Orleans.Runtime;
+using System.Collections.Concurrent;
 
 namespace Orleans.Providers.RabbitMQ.Streams
 {
@@ -13,27 +14,31 @@ namespace Orleans.Providers.RabbitMQ.Streams
     {
         private RabbitMQStreamProviderConfig _config;
         private IConnection _connection;
-        private IRabbitMQCustomMapper _customMapper;
         private Logger _logger;
+        private IRabbitMQMapper _mapper;
         private IModel _model;
-
+        private ConcurrentDictionary<QueueId, object> _queues;
+        private IStreamQueueMapper _streamQueueMapper;
+        
         public StreamProviderDirection Direction { get { return StreamProviderDirection.ReadWrite; } }
 
         public bool IsRewindable { get { return false; } }
 
         public string Name { get; private set; }
         
-        public RabbitMQAdapter(RabbitMQStreamProviderConfig config, Logger logger, string providerName, IRabbitMQCustomMapper customMapper)
+        public RabbitMQAdapter(RabbitMQStreamProviderConfig config, Logger logger, string providerName, IStreamQueueMapper streamQueueMapper, IRabbitMQMapper mapper)
         {
             _config = config;
-            _customMapper = customMapper;
             _logger = logger;
             Name = providerName;
+            _streamQueueMapper = streamQueueMapper;
+            _mapper = mapper;
+            _queues = new ConcurrentDictionary<QueueId, object>();
         }
 
         public IQueueAdapterReceiver CreateReceiver(QueueId queueId)
         {
-            return RabbitMQAdapterReceiver.Create(_config, _logger, Name, _customMapper);
+            return RabbitMQAdapterReceiver.Create(_config, _logger, Name, _mapper);
         }
 
         public async Task QueueMessageBatchAsync<T>(Guid streamGuid, string streamNamespace, IEnumerable<T> events, StreamSequenceToken token, Dictionary<string, object> requestContext)
@@ -45,6 +50,10 @@ namespace Orleans.Providers.RabbitMQ.Streams
         {
             if (_connection == null)
                 CreateConnection();
+
+            var queue = _streamQueueMapper.GetQueueForStream(streamGuid, streamNamespace);
+            
+            // TODO: Handle queues.
 
             foreach (var e in events)
             {

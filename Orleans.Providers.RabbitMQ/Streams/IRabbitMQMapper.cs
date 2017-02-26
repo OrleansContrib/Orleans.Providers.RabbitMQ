@@ -3,7 +3,7 @@ using System;
 
 namespace Orleans.Providers.RabbitMQ.Streams
 {
-    public interface IRabbitMQCustomMapper
+    public interface IRabbitMQMapper
     {
         void Init(Logger logger);
         T MapToType<T>(byte[] message);
