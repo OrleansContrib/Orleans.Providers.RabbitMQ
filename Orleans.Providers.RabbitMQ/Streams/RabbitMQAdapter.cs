@@ -38,15 +38,19 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         public async Task QueueMessageBatchAsync<T>(Guid streamGuid, string streamNamespace, IEnumerable<T> events, StreamSequenceToken token, Dictionary<string, object> requestContext)
         {
-            await Task.Run(() => {
-                if (_connection == null)
-                    CreateConnection();
-                foreach (var e in events)
-                {
-                    var bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(e));
-                    _model.BasicPublish(_config.Exchange, _config.RoutingKey, null, bytes);
-                }
-            });
+            await Task.Run(() => QueueMessageBatchExternal<T>(streamGuid, streamNamespace, events,  token, requestContext));
+        }
+
+        private void QueueMessageBatchExternal<T>(Guid streamGuid, string streamNamespace, IEnumerable<T> events, StreamSequenceToken token, Dictionary<string, object> requestContext)
+        {
+            if (_connection == null)
+                CreateConnection();
+
+            foreach (var e in events)
+            {
+                var bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(e));
+                _model.BasicPublish(_config.Exchange, _config.RoutingKey, null, bytes);
+            }
         }
 
         private void CreateConnection()
