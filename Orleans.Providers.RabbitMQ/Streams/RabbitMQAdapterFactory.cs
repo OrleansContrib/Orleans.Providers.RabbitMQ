@@ -8,8 +8,6 @@ namespace Orleans.Providers.RabbitMQ.Streams
 {
     public class RabbitMQAdapterFactory<TMapper> : IQueueAdapterFactory where TMapper : IRabbitMQMapper
     {
-        public const int NumQueuesDefaultValue = 8;
-
         private SimpleQueueAdapterCache _adapterCache;
         private int _cacheSize;
         private RabbitMQStreamProviderConfig _config;
@@ -36,7 +34,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
             _cacheSize = SimpleQueueAdapterCache.ParseSize(config, 4096);
             _adapterCache = new SimpleQueueAdapterCache(_cacheSize, logger);
 
-            _streamQueueMapper = new HashRingBasedStreamQueueMapper(NumQueuesDefaultValue, _providerName);
+            _streamQueueMapper = new HashRingBasedStreamQueueMapper(_config.NumQueues, _providerName);
 
             if (StreamFailureHandlerFactory == null)
             {

@@ -5,6 +5,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
 {
     public class RabbitMQStreamProviderConfig
     {
+        public int NumQueues { get; private set; }
         public string HostName { get; private set; }
         public int Port { get; private set; }
         public string VirtualHost { get; private set; }
@@ -21,6 +22,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         public RabbitMQStreamProviderConfig(IProviderConfiguration config)
         {
+            NumQueues = GetOptionalIntProperty(config, "NumQueues", 8);
             HostName = config.Properties["HostName"];
             Port = config.GetIntProperty("Port", 5671);
             VirtualHost = config.Properties["VirtualHost"];
@@ -34,6 +36,13 @@ namespace Orleans.Providers.RabbitMQ.Streams
             RoutingKey = config.Properties["RoutingKey"];
             Username = config.Properties["Username"];
             Password = config.Properties["Password"];
+        }
+
+        private static int GetOptionalIntProperty(IProviderConfiguration config, string key, int settingDefault)
+        {
+            if (config.Properties.TryGetValue(key, out string outString))
+                return int.Parse(outString);
+            return settingDefault;
         }
     }
 }
