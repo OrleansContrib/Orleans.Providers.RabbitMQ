@@ -28,5 +28,15 @@ namespace Orleans.Providers.RabbitMQ.Streams
             T item = JsonConvert.DeserializeObject<T>(Encoding.ASCII.GetString(message));
             return item;
         }
+
+        public IEnumerable<string> GetPartitionKeys(QueueId queueId, int numQueues)
+        {
+            return new string[] { "#" };
+        }
+
+        public string GetPartitionName(string queue, QueueId queueId)
+        {
+            return queue;
+        }
     }
 }

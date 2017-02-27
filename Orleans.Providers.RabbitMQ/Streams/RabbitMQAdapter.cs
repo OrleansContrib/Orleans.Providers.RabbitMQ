@@ -19,7 +19,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
         private IModel _model;
         private ConcurrentDictionary<QueueId, object> _queues;
         private IStreamQueueMapper _streamQueueMapper;
-        
+
         public StreamProviderDirection Direction { get { return StreamProviderDirection.ReadWrite; } }
 
         public bool IsRewindable { get { return false; } }
@@ -38,7 +38,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         public IQueueAdapterReceiver CreateReceiver(QueueId queueId)
         {
-            return RabbitMQAdapterReceiver.Create(_config, _logger, Name, _mapper);
+            return RabbitMQAdapterReceiver.Create(_config, _logger, queueId, Name, _mapper);
         }
 
         public async Task QueueMessageBatchAsync<T>(Guid streamGuid, string streamNamespace, IEnumerable<T> events, StreamSequenceToken token, Dictionary<string, object> requestContext)

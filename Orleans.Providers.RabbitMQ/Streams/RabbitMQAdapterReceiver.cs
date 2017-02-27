@@ -15,17 +15,19 @@ namespace Orleans.Providers.RabbitMQ.Streams
         private Logger _logger;
         private IRabbitMQMapper _mapper;
         private IModel _model;
+        private QueueId _queueId;
         private string _providerName;
-        
-        public static IQueueAdapterReceiver Create(RabbitMQStreamProviderConfig config, Logger logger, string providerName, IRabbitMQMapper mapper)
+
+        public static IQueueAdapterReceiver Create(RabbitMQStreamProviderConfig config, Logger logger, QueueId queueId, string providerName, IRabbitMQMapper mapper)
         {
-            return new RabbitMQAdapterReceiver(config, logger, providerName, mapper);
+            return new RabbitMQAdapterReceiver(config, logger, queueId, providerName, mapper);
         }
 
-        public RabbitMQAdapterReceiver(RabbitMQStreamProviderConfig config, Logger logger, string providerName, IRabbitMQMapper mapper)
+        public RabbitMQAdapterReceiver(RabbitMQStreamProviderConfig config, Logger logger, QueueId queueId, string providerName, IRabbitMQMapper mapper)
         {
             _config = config;
             _logger = logger;
+            _queueId = queueId;
             _mapper = mapper;
             _providerName = providerName;
         }
@@ -82,6 +84,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         private void Connect()
         {
+            var partitionName = _mapper.GetPartitionName(_config.Queue, _queueId);
             var factory = new ConnectionFactory()
             {
                 HostName = _config.HostName,
@@ -92,8 +95,11 @@ namespace Orleans.Providers.RabbitMQ.Streams
             _connection = factory.CreateConnection($"{_providerName}_Consumer");
             _model = _connection.CreateModel();
             _model.ExchangeDeclare(_config.Exchange, _config.ExchangeType, _config.ExchangeDurable, _config.AutoDelete, null);
-            _model.QueueDeclare(_config.Queue, _config.QueueDurable, false, false, null);
-            _model.QueueBind(_config.Queue, _config.Exchange, _config.RoutingKey, null);
+            _model.QueueDeclare(partitionName, _config.QueueDurable, false, false, null);
+            foreach (var partitionKey in _mapper.GetPartitionKeys(_queueId, _config.NumQueues))
+            {
+                _model.QueueBind(partitionName, _config.Exchange, partitionKey, null);
+            }
         }
 
         public Task Initialize(TimeSpan timeout)
