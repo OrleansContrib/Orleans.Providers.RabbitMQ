@@ -7,7 +7,7 @@
     </StorageProviders>
     <StreamProviders>
       <Provider Type="Orleans.Providers.RabbitMQ.Streams.RabbitMQStreamProvider" Name="Default"
-                HostName="localhost" Port="5671" VirtualHost="/" Exchange="exchange" Queue="queue" Namespace="TestNamespace" RoutingKey="#" Username="username" Password="password" />
+                HostName="localhost" Port="5671" VirtualHost="/" Exchange="exchange" Queue="queue" Namespace="TestNamespace" RoutingKey="#" Username="guest" Password="guest" />
     </StreamProviders>
     <BootstrapProviders>
       <Provider Type="Orleans.Providers.RabbitMQ.Test.Host.Bootstrap.RabbitMQTestBootstrap" Name="BootstrapProvider" />
