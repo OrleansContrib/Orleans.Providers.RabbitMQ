@@ -15,13 +15,13 @@ namespace Orleans.Providers.RabbitMQ.Tests.Host.Grains
         {
             var provider = GetStreamProvider("Default");
             _stream = provider.GetStream<string>(this.GetPrimaryKey(), "TestNamespace");
-            return TaskDone.Done;
+            return Task.CompletedTask;
         }
 
         public Task Simulate()
         {
             RegisterTimer(OnSimulationTick, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2));
-            return TaskDone.Done;
+            return Task.CompletedTask;
         }
 
         public async Task Tick()

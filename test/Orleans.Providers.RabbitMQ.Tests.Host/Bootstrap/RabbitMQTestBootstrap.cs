@@ -10,7 +10,7 @@ namespace Orleans.Providers.RabbitMQ.Test.Host.Bootstrap
 
         public Task Close()
         {
-            return TaskDone.Done;
+            return Task.CompletedTask;
         }
 
         public async Task Init(string name, IProviderRuntime providerRuntime, IProviderConfiguration config)

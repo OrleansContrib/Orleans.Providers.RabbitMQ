@@ -1,20 +1,22 @@
-﻿using System;
-using Orleans.Runtime;
-using System.Collections.Generic;
+﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System.Text;
 using Orleans.Streams;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Orleans.Providers.RabbitMQ.Streams
 {
     public class RabbitMQDefaultMapper : IRabbitMQMapper
     {
-        private Logger _logger;
+        private ILogger _logger;
 
-        public void Init(Logger logger)
+        public RabbitMQDefaultMapper(ILoggerFactory loggerFactory)
         {
-            _logger = logger;
+            _logger = loggerFactory.CreateLogger(nameof(RabbitMQDefaultMapper));
         }
+
+        public void Init() { }
 
         public Tuple<Guid, string> MapToStream(byte[] message, string streamNamespace)
         {

@@ -1,37 +1,37 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.Logging;
+using Orleans.Providers.Streams.Common;
 using Orleans.Streams;
 using RabbitMQ.Client;
-using Orleans.Runtime;
-using Orleans.Providers.Streams.Common;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Orleans.Providers.RabbitMQ.Streams
 {
     public class RabbitMQAdapterReceiver : IQueueAdapterReceiver
     {
-        private RabbitMQStreamProviderConfig _config;
+        private RabbitMQStreamProviderOptions _config;
         private IConnection _connection;
-        private Logger _logger;
         private IRabbitMQMapper _mapper;
         private IModel _model;
+        private ILoggerFactory _loggerFactory;
         private QueueId _queueId;
         private string _providerName;
 
-        public static IQueueAdapterReceiver Create(RabbitMQStreamProviderConfig config, Logger logger, QueueId queueId, string providerName, IRabbitMQMapper mapper)
+        public static IQueueAdapterReceiver Create(RabbitMQStreamProviderOptions config, ILoggerFactory loggerFactory, QueueId queueId, string providerName, IRabbitMQMapper mapper)
         {
-            return new RabbitMQAdapterReceiver(config, logger, queueId, providerName, mapper);
+            return new RabbitMQAdapterReceiver(config, loggerFactory, queueId, providerName, mapper);
         }
 
-        public RabbitMQAdapterReceiver(RabbitMQStreamProviderConfig config, Logger logger, QueueId queueId, string providerName, IRabbitMQMapper mapper)
+        public RabbitMQAdapterReceiver(RabbitMQStreamProviderOptions config, ILoggerFactory loggerFactory, QueueId queueId, string providerName, IRabbitMQMapper mapper)
         {
             _config = config;
-            _logger = logger;
+            _loggerFactory = loggerFactory;
             _queueId = queueId;
             _mapper = mapper;
             _providerName = providerName;
         }
-        
+
         public async Task<IList<IBatchContainer>> GetQueueMessagesAsync(int maxCount)
         {
             return await Task.Run(() => GetQueueMessagesExternal(maxCount));
@@ -41,7 +41,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
         {
             List<IBatchContainer> batches = null;
             int count = 0;
-            
+
             while (true)
             {
                 if (count == maxCount)
@@ -104,19 +104,16 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         public Task Initialize(TimeSpan timeout)
         {
-            return TaskDone.Done;
+            return Task.CompletedTask;
         }
 
-        public Task MessagesDeliveredAsync(IList<IBatchContainer> messages)
-        {
-            // TODO: Ack messages, if required.
-            return TaskDone.Done;
-        }
+        public Task MessagesDeliveredAsync(IList<IBatchContainer> messages) => Task.CompletedTask;
 
         public Task Shutdown(TimeSpan timeout)
         {
-            // TODO: Handle shutdown.
-            throw new NotImplementedException();
+            _model.Close();
+            _connection.Close();
+            return Task.CompletedTask;
         }
     }
 }

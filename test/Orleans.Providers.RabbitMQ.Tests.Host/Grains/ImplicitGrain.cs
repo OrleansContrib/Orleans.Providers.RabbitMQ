@@ -20,18 +20,18 @@ namespace Orleans.Providers.RabbitMQ.Tests.Host.Grains
 
         public Task OnCompletedAsync()
         {
-            return TaskDone.Done;
+            return Task.CompletedTask;
         }
 
         public Task OnErrorAsync(Exception ex)
         {
-            return TaskDone.Done;
+            return Task.CompletedTask;
         }
 
         public Task OnNextAsync(string item, StreamSequenceToken token = null)
         {
             GetLogger().Info("Received message '{0}'!", item);
-            return TaskDone.Done;
+            return Task.CompletedTask;
         }
     }
 }
