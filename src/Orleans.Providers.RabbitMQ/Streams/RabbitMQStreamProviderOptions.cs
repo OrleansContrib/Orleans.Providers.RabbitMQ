@@ -1,9 +1,15 @@
-﻿namespace Orleans.Providers.RabbitMQ.Streams
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Orleans.Streams;
+
+namespace Orleans.Providers.RabbitMQ.Streams
 {
     public class RabbitMQStreamProviderOptions
     {
         public const string SECTION_NAME = "Orleans.Providers.RabbitMQ";
-        public int NumQueues { get; set; } = 8;
+        [JsonConverter(typeof(StringEnumConverter))]
+        public StreamProviderDirection Mode { get; set; } = StreamProviderDirection.ReadWrite;
+        public int NumberOfQueues { get; set; } = 8;
         public string HostName { get; set; }
         public int Port { get; set; } = 5671;
         public string VirtualHost { get; set; }

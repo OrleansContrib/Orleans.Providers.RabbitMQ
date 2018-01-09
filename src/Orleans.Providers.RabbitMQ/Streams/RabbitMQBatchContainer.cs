@@ -1,19 +1,18 @@
-﻿using System;
+﻿using Orleans.Streams;
+using System;
 using System.Collections.Generic;
-using Orleans.Streams;
-using Newtonsoft.Json;
-using System.Reflection;
-using System.Text;
 
 namespace Orleans.Providers.RabbitMQ.Streams
 {
     public class RabbitMQBatchContainer : IBatchContainer
     {
+        public ulong Tag { get; private set; }
         private byte[] _body;
         private IRabbitMQMapper _mapper;
 
-        public RabbitMQBatchContainer(byte[] body, IRabbitMQMapper mapper)
+        public RabbitMQBatchContainer(ulong tag, byte[] body, IRabbitMQMapper mapper)
         {
+            Tag = tag;
             _body = body;
             _mapper = mapper;
         }

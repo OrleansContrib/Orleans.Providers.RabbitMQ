@@ -31,7 +31,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
             _cacheSize = SimpleQueueAdapterCache.ParseSize(config, 4096);
             _adapterCache = new SimpleQueueAdapterCache(_cacheSize, providerName, _loggeFactory);
 
-            _streamQueueMapper = new HashRingBasedStreamQueueMapper(_config.NumQueues, _providerName);
+            _streamQueueMapper = new HashRingBasedStreamQueueMapper(_config.NumberOfQueues, _providerName);
 
             if (StreamFailureHandlerFactory == null)
             {

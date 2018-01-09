@@ -15,8 +15,10 @@ namespace Orleans.Providers.RabbitMQ.Streams
         private IRabbitMQMapper _mapper;
         private IModel _model;
         private ILoggerFactory _loggerFactory;
+        private ILogger _logger;
         private QueueId _queueId;
         private string _providerName;
+        private bool _shutdownRequested;
 
         public static IQueueAdapterReceiver Create(RabbitMQStreamProviderOptions config, ILoggerFactory loggerFactory, QueueId queueId, string providerName, IRabbitMQMapper mapper)
         {
@@ -25,6 +27,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         public RabbitMQAdapterReceiver(RabbitMQStreamProviderOptions config, ILoggerFactory loggerFactory, QueueId queueId, string providerName, IRabbitMQMapper mapper)
         {
+            _logger = loggerFactory.CreateLogger(nameof(RabbitMQAdapterReceiver));
             _config = config;
             _loggerFactory = loggerFactory;
             _queueId = queueId;
@@ -42,7 +45,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
             List<IBatchContainer> batches = null;
             int count = 0;
 
-            while (true)
+            while (!_shutdownRequested)
             {
                 if (count == maxCount)
                     return batches;
@@ -50,7 +53,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
                 if (!IsConnected())
                     Connect();
 
-                var result = _model.BasicGet(_config.Queue, true);
+                var result = _model.BasicGet(_config.Queue, false);
 
                 if (result == null)
                     return batches;
@@ -62,12 +65,14 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
                 count++;
             }
+
+            return null;
         }
 
         private RabbitMQBatchContainer CreateContainer(BasicGetResult result)
         {
             var streamMap = _mapper.MapToStream(result.Body, _config.Namespace);
-            var container = new RabbitMQBatchContainer(result.Body, _mapper)
+            var container = new RabbitMQBatchContainer(result.DeliveryTag, result.Body, _mapper)
             {
                 StreamGuid = streamMap.Item1,
                 StreamNamespace = streamMap.Item2,
@@ -96,7 +101,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
             _model = _connection.CreateModel();
             _model.ExchangeDeclare(_config.Exchange, _config.ExchangeType, _config.ExchangeDurable, _config.AutoDelete, null);
             _model.QueueDeclare(partitionName, _config.QueueDurable, false, false, null);
-            foreach (var partitionKey in _mapper.GetPartitionKeys(_queueId, _config.NumQueues))
+            foreach (var partitionKey in _mapper.GetPartitionKeys(_queueId, _config.NumberOfQueues))
             {
                 _model.QueueBind(partitionName, _config.Exchange, partitionKey, null);
             }
@@ -107,12 +112,28 @@ namespace Orleans.Providers.RabbitMQ.Streams
             return Task.CompletedTask;
         }
 
-        public Task MessagesDeliveredAsync(IList<IBatchContainer> messages) => Task.CompletedTask;
+        public Task MessagesDeliveredAsync(IList<IBatchContainer> messages)
+        {
+            var acks = new List<Task>(messages.Count);
+            foreach (RabbitMQBatchContainer msg in messages)
+            {
+                acks.Add(Task.Run(() => this._model.BasicAck(msg.Tag, false)));
+            }
+            return Task.WhenAll(acks);
+        }
 
         public Task Shutdown(TimeSpan timeout)
         {
-            _model.Close();
-            _connection.Close();
+            try
+            {
+                this._shutdownRequested = true;
+                _model.Close();
+                _connection.Close();
+            }
+            catch (Exception)
+            {
+                this._logger.LogWarning("Receiver already closed, ignoring...");
+            }
             return Task.CompletedTask;
         }
     }

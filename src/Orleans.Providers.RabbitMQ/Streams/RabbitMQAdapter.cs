@@ -20,7 +20,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
         private ConcurrentDictionary<QueueId, object> _queues;
         private IStreamQueueMapper _streamQueueMapper;
 
-        public StreamProviderDirection Direction { get { return StreamProviderDirection.ReadWrite; } }
+        public StreamProviderDirection Direction { get; private set; }
 
         public bool IsRewindable { get { return false; } }
 
@@ -28,6 +28,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         public RabbitMQAdapter(RabbitMQStreamProviderOptions config, ILoggerFactory loggerFactory, string providerName, IStreamQueueMapper streamQueueMapper, IRabbitMQMapper mapper)
         {
+            Direction = config.Mode;
             _config = config;
             _loggerFactory = loggerFactory;
             Name = providerName;
@@ -73,9 +74,12 @@ namespace Orleans.Providers.RabbitMQ.Streams
             };
             _connection = factory.CreateConnection($"{Name}_Producer");
             _model = _connection.CreateModel();
-            _model.ExchangeDeclare(_config.Exchange, _config.ExchangeType, _config.ExchangeDurable, _config.AutoDelete, null);
-            _model.QueueDeclare(_config.Queue, _config.QueueDurable, false, false, null);
-            _model.QueueBind(_config.Queue, _config.Exchange, _config.RoutingKey, null);
+            lock (_model)
+            {
+                _model.ExchangeDeclare(_config.Exchange, _config.ExchangeType, _config.ExchangeDurable, _config.AutoDelete, null);
+                _model.QueueDeclare(_config.Queue, _config.QueueDurable, false, false, null);
+                _model.QueueBind(_config.Queue, _config.Exchange, _config.RoutingKey, null);
+            }
         }
     }
 }
