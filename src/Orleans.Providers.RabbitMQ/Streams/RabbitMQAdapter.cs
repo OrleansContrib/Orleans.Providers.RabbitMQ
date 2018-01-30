@@ -35,6 +35,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
             _streamQueueMapper = streamQueueMapper;
             _mapper = mapper;
             _queues = new ConcurrentDictionary<QueueId, object>();
+            CreateConnection();
         }
 
         public IQueueAdapterReceiver CreateReceiver(QueueId queueId)
@@ -49,8 +50,8 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         private void QueueMessageBatchExternal<T>(Guid streamGuid, string streamNamespace, IEnumerable<T> events, StreamSequenceToken token, Dictionary<string, object> requestContext)
         {
-            if (_connection == null)
-                CreateConnection();
+            //if (_connection == null)
+            //    CreateConnection();
 
             var queue = _streamQueueMapper.GetQueueForStream(streamGuid, streamNamespace);
 
@@ -74,12 +75,9 @@ namespace Orleans.Providers.RabbitMQ.Streams
             };
             _connection = factory.CreateConnection($"{Name}_Producer");
             _model = _connection.CreateModel();
-            lock (_model)
-            {
-                _model.ExchangeDeclare(_config.Exchange, _config.ExchangeType, _config.ExchangeDurable, _config.AutoDelete, null);
-                _model.QueueDeclare(_config.Queue, _config.QueueDurable, false, false, null);
-                _model.QueueBind(_config.Queue, _config.Exchange, _config.RoutingKey, null);
-            }
+            _model.ExchangeDeclare(_config.Exchange, _config.ExchangeType, _config.ExchangeDurable, _config.AutoDelete, null);
+            _model.QueueDeclare(_config.Queue, _config.QueueDurable, false, false, null);
+            _model.QueueBind(_config.Queue, _config.Exchange, _config.RoutingKey, null);
         }
     }
 }
