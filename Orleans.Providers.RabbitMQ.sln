@@ -1,11 +1,23 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26403.7
+VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orleans.Providers.RabbitMQ.Tests.Host", "Orleans.Providers.RabbitMQ.Tests.Host\Orleans.Providers.RabbitMQ.Tests.Host.csproj", "{3ABEA1F7-9A0D-42A1-9CF0-2EF9F356B6F5}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5BADF0DD-678F-4E34-8C80-5726539D1227}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orleans.Providers.RabbitMQ", "Orleans.Providers.RabbitMQ\Orleans.Providers.RabbitMQ.csproj", "{85DA8917-0B66-4135-A6C4-C7F29C7E2017}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{934F6ACE-A35A-4256-8880-E5077B3D1984}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Orleans.Providers.RabbitMQ", "src\Orleans.Providers.RabbitMQ\Orleans.Providers.RabbitMQ.csproj", "{5F704F16-944B-422C-B094-261BB01A6948}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Orleans.Providers.RabbitMQ.Tests.Host", "test\Orleans.Providers.RabbitMQ.Tests.Host\Orleans.Providers.RabbitMQ.Tests.Host.csproj", "{5A439A8E-521A-4A1E-8BC0-D1C33F7CD63E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orleans.Providers.RabbitMQ.Tests", "test\Orleans.Providers.RabbitMQ.Tests\Orleans.Providers.RabbitMQ.Tests.csproj", "{7D927EF0-9660-428E-820D-499C58542DA7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{15388F81-1492-4B55-9A8F-72536C666807}"
+	ProjectSection(SolutionItems) = preProject
+		.circleci\config.yml = .circleci\config.yml
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,16 +25,28 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{3ABEA1F7-9A0D-42A1-9CF0-2EF9F356B6F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3ABEA1F7-9A0D-42A1-9CF0-2EF9F356B6F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3ABEA1F7-9A0D-42A1-9CF0-2EF9F356B6F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3ABEA1F7-9A0D-42A1-9CF0-2EF9F356B6F5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{85DA8917-0B66-4135-A6C4-C7F29C7E2017}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{85DA8917-0B66-4135-A6C4-C7F29C7E2017}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{85DA8917-0B66-4135-A6C4-C7F29C7E2017}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{85DA8917-0B66-4135-A6C4-C7F29C7E2017}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F704F16-944B-422C-B094-261BB01A6948}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F704F16-944B-422C-B094-261BB01A6948}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F704F16-944B-422C-B094-261BB01A6948}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F704F16-944B-422C-B094-261BB01A6948}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A439A8E-521A-4A1E-8BC0-D1C33F7CD63E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A439A8E-521A-4A1E-8BC0-D1C33F7CD63E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A439A8E-521A-4A1E-8BC0-D1C33F7CD63E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A439A8E-521A-4A1E-8BC0-D1C33F7CD63E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D927EF0-9660-428E-820D-499C58542DA7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D927EF0-9660-428E-820D-499C58542DA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D927EF0-9660-428E-820D-499C58542DA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D927EF0-9660-428E-820D-499C58542DA7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5F704F16-944B-422C-B094-261BB01A6948} = {5BADF0DD-678F-4E34-8C80-5726539D1227}
+		{5A439A8E-521A-4A1E-8BC0-D1C33F7CD63E} = {934F6ACE-A35A-4256-8880-E5077B3D1984}
+		{7D927EF0-9660-428E-820D-499C58542DA7} = {934F6ACE-A35A-4256-8880-E5077B3D1984}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D1619410-7BF8-4D2D-8F26-78B92E7654D6}
 	EndGlobalSection
 EndGlobal

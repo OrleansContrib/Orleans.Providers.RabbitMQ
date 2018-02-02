@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Orleans.Providers.RabbitMQ</PackageId>
+    <Title>Orleans.Providers.RabbitMQ - An implementation of the Orleans streaming provider model for RabbitMQ</Title>
+    <Description>An implementation of the Orleans streaming provider model for RabbitMQ</Description>
+    <Authors>Roger Creyke, Gutemberg Ribeiro</Authors>
+    <Product>Orleans Stream Provider for RabbitMQ</Product>
+    <PackageLicenseUrl>https://github.com/dotnet/Orleans#license</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/OrleansContrib/SignalR.Orleans</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/dotnet/orleans/gh-pages/assets/logo_128.png</PackageIconUrl>
+    <PackageTags>Orleans Cloud-Computing Actor-Model Actors Distributed-Systems Real-Time RabbitMQ C# .NET</PackageTags>
+    <PackageReleaseNotes>This provider library is in early development and is not recommended for production usage.</PackageReleaseNotes>
+    <RepositoryUrl>https://github.com/dotnet/Orleans</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <IncludeSymbols>true</IncludeSymbols>
+    <IncludeSource>true</IncludeSource>
+    <VersionPrefix>1.0.0-alpha-1</VersionPrefix>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Orleans.OrleansProviders" Version="2.0.0-beta3" />
+    <PackageReference Include="Microsoft.Orleans.OrleansRuntime" Version="2.0.0-beta3" />
+    <PackageReference Include="RabbitMQ.Client" Version="5.0.1" />
+  </ItemGroup>
+
+</Project>

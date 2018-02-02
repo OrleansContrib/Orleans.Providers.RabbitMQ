@@ -1,8 +1,9 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Orleans.Providers.Streams.Common;
-using Orleans.Runtime;
 using Orleans.Streams;
+using System;
+using System.Threading.Tasks;
 
 namespace Orleans.Providers.RabbitMQ.Streams
 {
@@ -10,31 +11,27 @@ namespace Orleans.Providers.RabbitMQ.Streams
     {
         private SimpleQueueAdapterCache _adapterCache;
         private int _cacheSize;
-        private RabbitMQStreamProviderConfig _config;
+        private RabbitMQStreamProviderOptions _config;
         private IRabbitMQMapper _mapper;
-        private Logger _logger;
+        private ILoggerFactory _loggeFactory;
         private string _providerName;
         private IStreamQueueMapper _streamQueueMapper;
 
-        public RabbitMQAdapterFactory()
-        {
-            _mapper = Activator.CreateInstance<TMapper>();
-        }
-
         protected Func<QueueId, Task<IStreamFailureHandler>> StreamFailureHandlerFactory { private get; set; }
 
-        public void Init(IProviderConfiguration config, string providerName, Logger logger, IServiceProvider serviceProvider)
+        public void Init(IProviderConfiguration config, string providerName, IServiceProvider serviceProvider)
         {
-            _config = new RabbitMQStreamProviderConfig(config);
+            _config = serviceProvider.GetRequiredService<RabbitMQStreamProviderOptions>();
             _providerName = providerName;
-            _logger = logger;
+            _loggeFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
 
-            _mapper.Init(logger);
+            _mapper = serviceProvider.GetRequiredService<IRabbitMQMapper>();
+            _mapper.Init();
 
             _cacheSize = SimpleQueueAdapterCache.ParseSize(config, 4096);
-            _adapterCache = new SimpleQueueAdapterCache(_cacheSize, logger);
+            _adapterCache = new SimpleQueueAdapterCache(_cacheSize, providerName, _loggeFactory);
 
-            _streamQueueMapper = new HashRingBasedStreamQueueMapper(_config.NumQueues, _providerName);
+            _streamQueueMapper = new HashRingBasedStreamQueueMapper(_config.NumberOfQueues, _providerName);
 
             if (StreamFailureHandlerFactory == null)
             {
@@ -45,7 +42,7 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         public Task<IQueueAdapter> CreateAdapter()
         {
-            IQueueAdapter adapter = new RabbitMQAdapter(_config, _logger, _providerName, _streamQueueMapper, _mapper);
+            IQueueAdapter adapter = new RabbitMQAdapter(_config, _loggeFactory, _providerName, _streamQueueMapper, _mapper);
             return Task.FromResult(adapter);
         }
 

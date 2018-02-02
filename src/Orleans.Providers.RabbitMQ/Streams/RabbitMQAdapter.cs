@@ -1,58 +1,60 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Orleans.Streams;
 using RabbitMQ.Client;
-using Newtonsoft.Json;
-using System.Text;
-using Orleans.Runtime;
+using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Orleans.Providers.RabbitMQ.Streams
 {
     public class RabbitMQAdapter : IQueueAdapter
     {
-        private RabbitMQStreamProviderConfig _config;
+        private RabbitMQStreamProviderOptions _config;
         private IConnection _connection;
-        private Logger _logger;
+        private ILoggerFactory _loggerFactory;
         private IRabbitMQMapper _mapper;
         private IModel _model;
         private ConcurrentDictionary<QueueId, object> _queues;
         private IStreamQueueMapper _streamQueueMapper;
 
-        public StreamProviderDirection Direction { get { return StreamProviderDirection.ReadWrite; } }
+        public StreamProviderDirection Direction { get; private set; }
 
         public bool IsRewindable { get { return false; } }
 
         public string Name { get; private set; }
-        
-        public RabbitMQAdapter(RabbitMQStreamProviderConfig config, Logger logger, string providerName, IStreamQueueMapper streamQueueMapper, IRabbitMQMapper mapper)
+
+        public RabbitMQAdapter(RabbitMQStreamProviderOptions config, ILoggerFactory loggerFactory, string providerName, IStreamQueueMapper streamQueueMapper, IRabbitMQMapper mapper)
         {
+            Direction = config.Mode;
             _config = config;
-            _logger = logger;
+            _loggerFactory = loggerFactory;
             Name = providerName;
             _streamQueueMapper = streamQueueMapper;
             _mapper = mapper;
             _queues = new ConcurrentDictionary<QueueId, object>();
+            CreateConnection();
         }
 
         public IQueueAdapterReceiver CreateReceiver(QueueId queueId)
         {
-            return RabbitMQAdapterReceiver.Create(_config, _logger, queueId, Name, _mapper);
+            return RabbitMQAdapterReceiver.Create(_config, _loggerFactory, queueId, Name, _mapper);
         }
 
         public async Task QueueMessageBatchAsync<T>(Guid streamGuid, string streamNamespace, IEnumerable<T> events, StreamSequenceToken token, Dictionary<string, object> requestContext)
         {
-            await Task.Run(() => QueueMessageBatchExternal<T>(streamGuid, streamNamespace, events,  token, requestContext));
+            await Task.Run(() => QueueMessageBatchExternal<T>(streamGuid, streamNamespace, events, token, requestContext));
         }
 
         private void QueueMessageBatchExternal<T>(Guid streamGuid, string streamNamespace, IEnumerable<T> events, StreamSequenceToken token, Dictionary<string, object> requestContext)
         {
-            if (_connection == null)
-                CreateConnection();
+            //if (_connection == null)
+            //    CreateConnection();
 
             var queue = _streamQueueMapper.GetQueueForStream(streamGuid, streamNamespace);
-            
+
             // TODO: Handle queues.
 
             foreach (var e in events)
