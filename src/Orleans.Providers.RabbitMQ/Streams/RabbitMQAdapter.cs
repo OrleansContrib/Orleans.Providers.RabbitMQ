@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Orleans.Streams;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Framing;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -55,12 +56,17 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
             var queue = _streamQueueMapper.GetQueueForStream(streamGuid, streamNamespace);
 
-            // TODO: Handle queues.
+            var properties = _model.CreateBasicProperties();
+            properties.Headers = new Dictionary<string, object>()
+            {
+                {"streamGuid", streamGuid.ToString()},
+                {"streamNamespace", streamNamespace},
+            };
 
             foreach (var e in events)
             {
                 var bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(e));
-                _model.BasicPublish(_config.Exchange, _config.RoutingKey, null, bytes);
+                _model.BasicPublish(_config.Exchange, _config.RoutingKey, properties, bytes);
             }
         }
 

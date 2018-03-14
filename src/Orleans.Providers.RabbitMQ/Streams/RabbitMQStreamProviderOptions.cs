@@ -19,7 +19,6 @@ namespace Orleans.Providers.RabbitMQ.Streams
         public bool AutoDelete { get; set; }
         public string Queue { get; set; }
         public bool QueueDurable { get; set; }
-        public string Namespace { get; set; }
         public string RoutingKey { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }

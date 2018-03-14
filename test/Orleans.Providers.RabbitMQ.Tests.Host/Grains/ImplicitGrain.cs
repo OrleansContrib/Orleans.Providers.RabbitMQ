@@ -30,7 +30,7 @@ namespace Orleans.Providers.RabbitMQ.Tests.Host.Grains
 
         public Task OnNextAsync(string item, StreamSequenceToken token = null)
         {
-            GetLogger().Info("Received message '{0}'!", item);
+            GetLogger().Info("[{0}] \t Received message '{1}'!", this.GetPrimaryKey(), item);
             return Task.CompletedTask;
         }
     }
