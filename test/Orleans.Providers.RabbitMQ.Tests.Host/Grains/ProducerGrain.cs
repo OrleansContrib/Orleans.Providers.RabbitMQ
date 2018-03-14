@@ -20,7 +20,7 @@ namespace Orleans.Providers.RabbitMQ.Tests.Host.Grains
 
         public Task Simulate()
         {
-            RegisterTimer(OnSimulationTick, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2));
+            RegisterTimer(OnSimulationTick, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
             return Task.CompletedTask;
         }
 
@@ -37,8 +37,8 @@ namespace Orleans.Providers.RabbitMQ.Tests.Host.Grains
 
         private async Task SendMessages(params string[] messages)
         {
-            GetLogger().Info("Sending message{0} '{1}'...",
-                messages.Length > 1 ? "s" : "", string.Join(",", messages));
+            GetLogger().Info("[{0}] \t Sending message {1} '{2}'...",
+                this.GetPrimaryKey(), messages.Length > 1 ? "s" : "", string.Join(",", messages));
             
             if (messages.Length == 1)
             { 

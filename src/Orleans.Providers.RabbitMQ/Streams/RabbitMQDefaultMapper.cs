@@ -18,9 +18,17 @@ namespace Orleans.Providers.RabbitMQ.Streams
 
         public void Init() { }
 
-        public Tuple<Guid, string> MapToStream(byte[] message, string streamNamespace)
+        public Tuple<Guid, string> MapToStream(IDictionary<string, object> headers)
         {
-            return new Tuple<Guid, string>(Guid.Empty, streamNamespace);
+            Guid streamGuid = Guid.Empty;
+            string streamNamespace = "TestNamespace";
+
+            if(headers.TryGetValue("streamGuid", out object streamGuidValue))
+                streamGuid = Guid.Parse(Encoding.UTF8.GetString((byte[]) streamGuidValue));
+            if(headers.TryGetValue("streamNamespace", out object streamNamespaceValue))
+                streamNamespace = Encoding.UTF8.GetString((byte[]) streamNamespaceValue);
+
+            return new Tuple<Guid, string>(streamGuid, streamNamespace);
         }
 
         public T MapToType<T>(byte[] message)
