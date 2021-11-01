@@ -1,6 +1,6 @@
 # Orleans.Providers.RabbitMQ
 An implementation of the Orleans streaming provider model for RabbitMQ.
-> This provider library is in early development and is not recommended for production usage.
+> This provider library was in early development and is no longer maintained - it remains as a partial reference implementation only.
 
 ### Test Configuration
 To test this provider, you can spin up a RabbitMQ Docker container:
